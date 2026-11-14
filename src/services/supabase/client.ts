@@ -2,8 +2,21 @@ import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const isTestEnv = process.env.NODE_ENV === 'test';
+
+const rawUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const rawAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!rawUrl || !rawAnonKey) {
+  if (!isTestEnv) {
+    throw new Error(
+      'Missing required Supabase environment configuration: Ensure EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are set.'
+    );
+  }
+}
+
+const supabaseUrl = rawUrl || (isTestEnv ? 'https://test-mock.supabase.co' : '');
+const supabaseAnonKey = rawAnonKey || (isTestEnv ? 'test-mock-anon-key' : '');
 
 // Custom storage adapter using SecureStore for native platforms
 const ExpoSecureStoreAdapter = {

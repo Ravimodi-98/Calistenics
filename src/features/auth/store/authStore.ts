@@ -17,6 +17,7 @@ interface AuthStoreState {
   signUp: (input: SignUpInput) => Promise<{ needsEmailVerification: boolean }>;
   signIn: (input: SignInInput) => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resendVerification: () => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
@@ -163,6 +164,23 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await authService.signOut();
+      set({
+        user: null,
+        session: null,
+        profile: null,
+        isLoading: false,
+        pendingVerificationEmail: null,
+      });
+    } catch (err: any) {
+      set({ isLoading: false, error: err.message });
+      throw err;
+    }
+  },
+
+  deleteAccount: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      await authService.deleteAccount();
       set({
         user: null,
         session: null,

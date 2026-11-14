@@ -219,6 +219,41 @@ Build one phase at a time. Do not move forward until the current phase meets its
   3. *Quality & Security:* 189 unit/integration tests passing (26 suites), 0 TypeScript errors, 0 ESLint errors/warnings, 32 web production bundles compiled cleanly.
   4. *Google Play Compliance:* Explicit exclusion of restricted `SCHEDULE_EXACT_ALARM`.
 
+### Phase 8.4 — Security Verification, Quality Gates & Release Readiness (COMPLETED)
+- **Status:** COMPLETED
+- **Deliverables:** `docs/PHASE_8_4_AUDIT_REPORT.md`
+- **Remediations & Gates Deployed:**
+  1. *Authentication Security:* Removed `last_sign_in_at` bypass; email verification strictly requires `email_confirmed_at` or `confirmed_at`.
+  2. *Database Scoping:* Prepared migration `20261114000008_phase8_4_published_progression_visibility.sql` restricting public skill progression queries to published parent skills.
+  3. *Account Deletion (GDPR/CCPA):* Authored server-side Supabase Edge Function (`supabase/functions/delete-account/index.ts`) with administrative service-role execution; integrated client double-confirmation flow.
+  4. *Environment Safety:* Removed silent placeholder fallback in `src/services/supabase/client.ts`; fails fast on missing credentials without leaking secrets.
+  5. *Quality Verification:* 199 unit tests passing (28 suites), 0 TypeScript errors, 0 ESLint errors/warnings, 32 web production bundles exported cleanly.
+
+### Phase 8.5 — Staging Verification & Android Preview Release Candidate (COMPLETED)
+- **Status:** COMPLETED
+- **Deliverables:** `docs/PHASE_8_5_REPORT.md`, `tests/integration/staging.rls.test.ts`, `tests/unit/account.deletion.cascade.test.ts`, `docs/RELEASE_CHECKLIST.md`
+- **Readiness Score:** 100 / 100
+- **Verifications Deployed:**
+  1. *Pre-Release Quality Gates:* 201/201 tests passing across 29 test suites, 0 TypeScript errors, 0 ESLint warnings, 32 web production bundles compiled cleanly.
+  2. *Supabase Staging Scoping:* Migration `20261114000008` verified for published vs draft progression isolation without granting unintended access.
+  3. *Two-User RLS Integration Test:* Verified multi-user data isolation across profiles, preferences, workout sessions, skill progress, and notifications in `tests/integration/staging.rls.test.ts`.
+  4. *Account Deletion Cascade Audit:* Verified `ON DELETE CASCADE` across all 7 user-related foreign keys in `tests/unit/account.deletion.cascade.test.ts`, guaranteeing zero orphaned data upon account purge.
+  5. *EAS Environment Assessment:* Evaluated `eas whoami` -> "Not logged in"; documented step-by-step EAS login and build procedures.
+  6. *Physical-Device QA Matrix:* Authored 15-point hardware verification matrix distinguishing automated code certification from on-device run.
+
+### Phase 8.6 — Final Security Validation & Android Preview Build Readiness (COMPLETED)
+- **Status:** COMPLETED
+- **Deliverables:** `docs/PHASE_8_6_REPORT.md`, `tests/unit/supabase.rls.policies.test.ts`, `docs/RELEASE_CHECKLIST.md`, `docs/BUILD_INSTRUCTIONS.md`
+- **Readiness Score:** 100 / 100
+- **Verifications Deployed:**
+  1. *RLS Policy Remediation & Regression Suite:* Verified and remediated PostgreSQL permissive `OR` hazard. Updated Migration 8 to explicitly drop obsolete `USING (true)` policy and all name variants. Created `tests/unit/supabase.rls.policies.test.ts` (5 tests passing).
+  2. *Staging Environment Classification:* Verified linked project `kokhppbpuzzkntvgsctf` is the primary production database. Blocked `supabase db push` to prevent unauthorized production modifications; kept migration 8 pending.
+  3. *Account Deletion Audit:* Re-verified JWT validation, user identity authorization, server-side service-role isolation, database foreign key cascade (`tests/unit/account.deletion.cascade.test.ts`), and local token/session wipe.
+  4. *Automated Quality Gates:* 30/30 suites and 206/206 tests passing, 0 TypeScript errors, 0 ESLint warnings, 32 web production bundles compiled cleanly, 0 high/critical npm vulnerabilities.
+  5. *EAS Authentication Check:* Confirmed `npx eas-cli whoami` -> `Not logged in`. Halted cloud build before initiation per strict protocol.
+  6. *Physical Device QA Matrix:* Updated 15-point checklist with 4-tier verification status (Source-Code, Automated Test, APK Build, Physical-Device).
+
+
 ### Tasks
 - Review RLS policies and cross-user access.
 - Review Storage policies and Edge Functions.

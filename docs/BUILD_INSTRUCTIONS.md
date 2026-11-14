@@ -39,7 +39,7 @@ npm run typecheck
 # 2. Linting
 npm run lint
 
-# 3. Unit & Integration Tests (189 tests)
+# 3. Unit & Integration Tests (206 tests across 30 suites)
 npm test
 
 # 4. Web Production Bundle Dry-Run
@@ -145,3 +145,24 @@ cd android
 Artifacts will be located at:
 - APK: `android/app/build/outputs/apk/release/app-release.apk`
 - AAB: `android/app/build/outputs/bundle/release/app-release.aab`
+
+---
+
+## 7. Backend & Staging Deployment Instructions (Authorized Releases Only)
+
+### Edge Function Deployment (`delete-account`)
+```bash
+# Requires Supabase CLI authenticated
+npx supabase functions deploy delete-account --project-ref kokhppbpuzzkntvgsctf
+```
+
+### Staging / Production Migration Application
+```bash
+# Review pending migrations
+npx supabase migration list
+
+# Apply pending migrations to linked database
+npx supabase db push --linked
+```
+> **Security Guard:** Never execute `supabase db push` against the live production project without explicit authorization. Always verify the linked project ref before deployment.
+

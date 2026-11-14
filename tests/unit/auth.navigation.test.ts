@@ -33,8 +33,8 @@ export function evaluateNavigationTarget({
     return null;
   }
 
-  // Case 2: Unverified email
-  const isVerified = !!user.email_confirmed_at || !!user.confirmed_at || !!user.last_sign_in_at;
+  // Case 2: Unverified email (strictly requires email_confirmed_at or confirmed_at)
+  const isVerified = !!user.email_confirmed_at || !!user.confirmed_at;
   if (!isVerified) {
     if (currentSubroute === 'verify-email') return null;
     return '/(auth)/verify-email';
@@ -87,6 +87,32 @@ describe('Protected Route Navigation Decision Logic', () => {
       currentSegmentGroup: '(tabs)',
     });
     expect(target).toBe('/(auth)/verify-email');
+  });
+
+  test('user with last_sign_in_at but missing email_confirmed_at is NOT considered verified and redirected to verify-email', () => {
+    const target = evaluateNavigationTarget({
+      user: {
+        email_confirmed_at: undefined,
+        confirmed_at: undefined,
+        last_sign_in_at: '2026-11-14T12:00:00Z',
+      },
+      profile: { onboarding_completed: true },
+      currentSegmentGroup: '(tabs)',
+    });
+    expect(target).toBe('/(auth)/verify-email');
+  });
+
+  test('user with confirmed_at is considered verified and allowed on dashboard', () => {
+    const target = evaluateNavigationTarget({
+      user: {
+        email_confirmed_at: undefined,
+        confirmed_at: '2026-11-14T12:00:00Z',
+        last_sign_in_at: '2026-11-14T12:00:00Z',
+      },
+      profile: { onboarding_completed: true },
+      currentSegmentGroup: '(tabs)',
+    });
+    expect(target).toBeNull();
   });
 
   test('authenticated and verified user with incomplete onboarding is redirected to onboarding welcome', () => {

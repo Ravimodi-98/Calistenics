@@ -28,8 +28,8 @@ export function useProtectedRoute() {
       return;
     }
 
-    // Case 2: Authenticated but unverified email (when confirmation is required)
-    const isVerified = !!user.email_confirmed_at || !!user.confirmed_at || !!user.last_sign_in_at;
+    // Case 2: Authenticated but unverified email (strictly requires email_confirmed_at or confirmed_at)
+    const isVerified = !!user.email_confirmed_at || !!user.confirmed_at;
     const isVerificationRoute = segArray[1] === 'verify-email' || segArray.includes('verify-email');
 
     if (!isVerified && !isVerificationRoute) {

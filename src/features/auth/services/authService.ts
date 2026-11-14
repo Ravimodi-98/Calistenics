@@ -137,6 +137,29 @@ export class AuthService {
   }
 
   /**
+   * Securely requests account deletion via trusted server-side Supabase Edge Function.
+   * Purges local session and cache upon successful server deletion.
+   */
+  async deleteAccount(): Promise<void> {
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        method: 'POST',
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to delete account. Please try again.');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+    } finally {
+      // Regardless of remote deletion outcome or network state, purge local session
+      await this.signOut();
+    }
+  }
+
+  /**
    * Listens to auth state changes from Supabase.
    */
   onAuthStateChange(callback: (event: string, session: any) => void) {

@@ -153,25 +153,41 @@ Supporting tokens:
 
 - `npm run typecheck`: PASS (0 errors)
 - `npm run lint`: PASS (0 errors, 0 warnings)
-- `npm test`: PASS (26 suites, 189 tests passed in 7.5s)
-- `npx expo export --platform web`: PASS (32 bundles compiled cleanly in 1.9s, 3,776 modules)
-- `npm audit`: 0 critical, 0 high vulnerabilities (high-severity zod advisory eliminated)
+- `npm test`: PASS (30 suites, 206 tests passed in 8.5s)
+- `npx expo export --platform web`: PASS (32 bundles compiled cleanly in 2.2s, 3,776 modules)
+- `npm audit`: 0 critical, 0 high vulnerabilities (25 dev tool advisories)
 - `supabase db push --remote`: PASS (`20261114000007_phase8_security_hardening.sql` applied live to remote project `kokhppbpuzzkntvgsctf`)
 
-### Phase 8.3 Release Candidate & Production Packaging Report
-- Detailed reports written to:
-  - `docs/PHASE_8_3_RELEASE_REPORT.md`
-  - `docs/BUILD_INSTRUCTIONS.md`
-  - `docs/RELEASE_CHECKLIST.md`
-- Production Readiness Score: **99 / 100**.
-- Complete EAS build configuration for preview APK (`android.buildType: "apk"`) and production AAB (`android.buildType: "app-bundle"` with auto-increment).
-- Full adaptive icon suite and monochrome notification status icon configured.
-- Zero credential leaks; full CRUD RLS policies active across remote Supabase.
-- 100% test pass rate across all 26 unit/integration test suites (189 tests).
+### Phase 8.4 Security Verification, Quality Gates & Release Readiness Report
+- Detailed report written to `docs/PHASE_8_4_AUDIT_REPORT.md`.
+- Strict email verification: removed `last_sign_in_at` bypass in `useProtectedRoute.ts`.
+- Database policy: prepared migration `20261114000008_phase8_4_published_progression_visibility.sql` restricting public skill progressions to published parent skills (not applied to production per policy).
+- Secure account deletion: authored `supabase/functions/delete-account/index.ts` with server-side service-role execution; integrated client double-confirmation in `app/(tabs)/profile.tsx`.
+- Environment safety: eliminated silent placeholder fallback in `src/services/supabase/client.ts`.
+- 100% test pass rate across all 28 unit/integration test suites (199 tests).
+
+### Phase 8.5 Staging Verification & Android Preview Release Candidate
+- Detailed report written to `docs/PHASE_8_5_REPORT.md`.
+- Created `tests/integration/staging.rls.test.ts` verifying two-user cross-boundary isolation and published skill progression scoping.
+- Created `tests/unit/account.deletion.cascade.test.ts` verifying `ON DELETE CASCADE` across all 7 user-related foreign keys with zero orphaned records.
+- Pre-release gates re-verified: 201/201 tests passing across 29 suites, 0 TS errors, 0 ESLint warnings, 32 web bundles exported.
+- Evaluated EAS CLI status: `eas whoami` -> "Not logged in"; documented step-by-step EAS login and build instructions.
+- Authored 15-point physical-device QA verification matrix in `docs/RELEASE_CHECKLIST.md`.
+
+### Phase 8.6 Final Security Validation & Android Preview Build Readiness
+- Detailed report written to `docs/PHASE_8_6_REPORT.md`.
+- Remediated PostgreSQL permissive `OR` hazard in `20261114000008_phase8_4_published_progression_visibility.sql` by explicitly dropping obsolete `USING (true)` policy and all historical name variants.
+- Created `tests/unit/supabase.rls.policies.test.ts` verifying policy drop and evaluating PostgreSQL `OR` behavior (5/5 tests passing).
+- Verified linked Supabase project `kokhppbpuzzkntvgsctf` is production. Preserved strict policy: migration 8 kept pending, `supabase db push` blocked.
+- Account deletion verified across edge function (JWT, identity, service-role isolation) and client store (`finally { await this.signOut(); }`).
+- Quality gates re-run: 30/30 suites and 206/206 tests passing, 0 TS errors, 0 ESLint errors, 32 web production bundles exported cleanly.
+- Confirmed EAS status `Not logged in` and halted cloud build per instructions.
+- Prepared 15-point physical device verification matrix with 4-tier verification status in `docs/RELEASE_CHECKLIST.md`.
 
 ## 9. Next Steps
 
-1. Present Phase 8.3 Release Candidate Report, Release Checklist, and Build Instructions to user.
-2. User / DevOps initiates EAS build via `npm run build:android:preview` and `npm run build:android:production`.
-3. Physical device acceptance testing with generated Preview APK.
-4. Advance to Phase 9 (Advanced Features) upon user approval.
+1. User logs into EAS via `npx eas login` (or sets `EXPO_TOKEN`).
+2. Generate Android Preview APK via `npm run build:android:preview`.
+3. Side-load APK on physical Android hardware and execute the 15-point QA matrix.
+4. Deploy `delete-account` Supabase Edge Function and apply migration `20261114000008` to remote Supabase upon authorization.
+5. Generate signed production Android AAB (`npm run build:android:production`).

@@ -55,4 +55,21 @@ describe('Database Security & RLS Hardening (Phase 8.2)', () => {
       expect(content).not.toContain('postgres://postgres:');
     }
   });
+
+  describe('Phase 8.4 — Published Progression Visibility Policy', () => {
+    test('verifies migration 20261114000008_phase8_4_published_progression_visibility.sql exists', () => {
+      const migrationPath = path.join(migrationsDir, '20261114000008_phase8_4_published_progression_visibility.sql');
+      expect(fs.existsSync(migrationPath)).toBe(true);
+    });
+
+    test('migration 8 restricts skill_progressions to published skills via subquery', () => {
+      const migrationPath = path.join(migrationsDir, '20261114000008_phase8_4_published_progression_visibility.sql');
+      const content = fs.readFileSync(migrationPath, 'utf8');
+
+      expect(content).toContain('CREATE POLICY "Public can view published skill progressions"');
+      expect(content).toContain('ON public.skill_progressions');
+      expect(content).toContain("sc.content_status = 'published'");
+      expect(content).toContain('EXISTS');
+    });
+  });
 });

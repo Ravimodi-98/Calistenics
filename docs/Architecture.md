@@ -432,3 +432,18 @@ Use migrations for schema changes. Back up production data and test restore proc
 - **Adaptive Icon Stack:** Separated into `foregroundImage`, `backgroundImage`, `monochromeImage` (for Android 13+ themed icons), and `#E0DBF3` background color.
 - **Status Bar Notification Icon:** Dedicated monochrome alpha asset (`android-icon-monochrome.png`) preventing Android's white-box rendering issue.
 - **Packaging Scripts:** Standardized in `package.json` (`npm run build:android:preview`, `npm run build:android:production`, `npm run build:web`).
+
+## 12. Security Verification & Server-Side Deletion Architecture (Phase 8.4 Implemented)
+
+### Strict Email Verification Flow
+- **Authentication Guard (`useProtectedRoute.ts`):** Evaluates `email_confirmed_at` or `confirmed_at` explicitly. Eliminates the `last_sign_in_at` bypass, ensuring unconfirmed accounts cannot access protected tabs, workouts, or skills routes.
+
+### Published Progression Scoping
+- **Migration 8 (`20261114000008_phase8_4_published_progression_visibility.sql`):** Restricts public SELECT access on `skill_progressions` to stages whose parent skill in `skill_catalog` has `content_status = 'published'`, preventing leakage of drafted or unpublished progressions.
+
+### Server-Side Account Deletion Workflow
+- **Edge Function (`supabase/functions/delete-account/index.ts`):** Implements GDPR/CCPA compliant account purge. Authenticates caller's JWT, verifies caller identity (`auth.uid() = user.id`), and executes administrative `auth.admin.deleteUser()` using the server-side service role.
+- **Relational Integrity:** Schema cascade rules (`ON DELETE CASCADE`) automatically wipe all linked records across `profiles`, `user_preferences`, `workout_sessions`, `notification_preferences`, and `user_skill_progress`. Client code never possesses the service-role key.
+
+### Safe Environment Configuration
+- **Fail-Fast Client Initialization (`src/services/supabase/client.ts`):** Throws descriptive errors when required Supabase credentials are missing in production/development, preventing silent degraded operation while supporting clean mock configurations during testing.

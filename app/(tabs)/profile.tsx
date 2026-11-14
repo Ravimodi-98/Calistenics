@@ -24,6 +24,7 @@ import {
   AlertCircle,
   ChevronRight,
   Save,
+  Trash2,
 } from 'lucide-react-native';
 import { colors, radii, spacing } from '@/theme';
 import {
@@ -59,7 +60,7 @@ const DAYS_OF_WEEK = [
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, profile, signOut, updateProfile, isLoading: authLoading } = useAuthStore();
+  const { user, profile, signOut, deleteAccount, updateProfile, isLoading: authLoading } = useAuthStore();
   const {
     preferences: notifPrefs,
     permissionStatus,
@@ -94,6 +95,8 @@ export default function ProfileScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+  const [showDeleteAccountDialog, setShowDeleteAccountDialog] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -215,6 +218,19 @@ export default function ProfileScreen() {
       router.replace('/(auth)/welcome');
     } catch {
       Alert.alert('Sign Out Failed', 'Unable to sign out. Please check your connection.');
+    }
+  };
+
+  const handleDeleteAccountConfirm = async () => {
+    setShowDeleteAccountDialog(false);
+    try {
+      setIsDeletingAccount(true);
+      await deleteAccount();
+      router.replace('/(auth)/welcome');
+    } catch (err: any) {
+      Alert.alert('Account Deletion Failed', err.message || 'Unable to delete account. Please try again.');
+    } finally {
+      setIsDeletingAccount(false);
     }
   };
 
@@ -780,6 +796,19 @@ export default function ProfileScreen() {
               testID="profile-sign-out-button"
             />
           </View>
+
+          {/* Delete Account Trigger */}
+          <View style={styles.deleteAccountWrapper}>
+            <AppButton
+              title="Delete Account"
+              onPress={() => setShowDeleteAccountDialog(true)}
+              loading={isDeletingAccount}
+              variant="outline"
+              size="md"
+              icon={<Trash2 size={18} color={colors.error} />}
+              testID="profile-delete-account-button"
+            />
+          </View>
         </View>
 
         {/* CONFIRMATION DIALOG FOR SIGN OUT */}
@@ -792,6 +821,18 @@ export default function ProfileScreen() {
           isDestructive
           onConfirm={handleSignOutConfirm}
           onCancel={() => setShowSignOutDialog(false)}
+        />
+
+        {/* CONFIRMATION DIALOG FOR ACCOUNT DELETION */}
+        <ConfirmationDialog
+          visible={showDeleteAccountDialog}
+          title="Delete Account Permanently"
+          message="Are you sure you want to delete your account? This action is permanent and will completely erase all your workout history, progression stages, and settings in compliance with privacy regulations."
+          confirmLabel="Delete Permanently"
+          cancelLabel="Keep My Account"
+          isDestructive
+          onConfirm={handleDeleteAccountConfirm}
+          onCancel={() => setShowDeleteAccountDialog(false)}
         />
       </ScrollView>
     </ScreenContainer>
@@ -1039,5 +1080,8 @@ const styles = StyleSheet.create({
   },
   signOutWrapper: {
     marginTop: spacing.md,
+  },
+  deleteAccountWrapper: {
+    marginTop: spacing.sm,
   },
 });
